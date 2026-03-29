@@ -103,6 +103,15 @@ export default function LiveMap() {
       ));
     });
 
+    socket.on("rider_online", ({ riderId, fullName, phone, vehicleType }) => {
+      setRiders(prev => {
+        const exists = prev.find(r => String(r._id) === String(riderId));
+        if (exists) return prev.map(r => String(r._id) === String(riderId) ? { ...r, isOnline: true } : r);
+        // New rider came online — add to list
+        return [...prev, { _id: riderId, fullName, phone, vehicleType, isOnline: true, currentLocation: {} }];
+      });
+    });
+
     return () => socket.disconnect();
   }, [loadRiders]);
 
