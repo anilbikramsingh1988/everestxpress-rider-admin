@@ -13,6 +13,7 @@ import DeliveryRiderDetail from "./pages/DeliveryRiderDetail.jsx";
 import PromoCodes from "./pages/PromoCodes.jsx";
 import Withdrawals from "./pages/Withdrawals.jsx";
 import Finance     from "./pages/Finance.jsx";
+import LiveMap     from "./pages/LiveMap.jsx";
 import Settings    from "./pages/Settings.jsx";
 
 function RequireAuth({ children }) {
@@ -39,6 +40,7 @@ export default function App() {
                   <Route path="/customers/:id" element={<CustomerDetail />} />
                   <Route path="/delivery-riders" element={<DeliveryRiders />} />
                   <Route path="/delivery-riders/:id" element={<DeliveryRiderDetail />} />
+                  <Route path="/live-map" element={<LiveMap />} />
                   <Route path="/finance" element={<Finance />} />
                   <Route path="/withdrawals" element={<Withdrawals />} />
                   <Route path="/promo-codes" element={<PromoCodes />} />

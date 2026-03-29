@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, Users, Truck, Tag, Banknote, Settings2, LogOut, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Package, Users, Truck, Tag, Banknote, Settings2, LogOut, BarChart3, Map } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { label: "Bookings",        icon: Package,         to: "/bookings" },
   { label: "Customers",       icon: Users,           to: "/customers" },
   { label: "Delivery Riders", icon: Truck,           to: "/delivery-riders" },
+  { label: "Live Map",        icon: Map,             to: "/live-map" },
   { label: "Finance",         icon: BarChart3,       to: "/finance" },
   { label: "Withdrawals",     icon: Banknote,        to: "/withdrawals" },
   { label: "Promo Codes",     icon: Tag,             to: "/promo-codes" },
