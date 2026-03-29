@@ -23,12 +23,18 @@ export default function DeliveryRiders() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [riders, setRiders]     = useState([]);
-  const [liveMap, setLiveMap]   = useState({}); // riderId -> { isOnline, lat, lng }
   const [total, setTotal]       = useState(0);
   const [pages, setPages]       = useState(1);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
   const [togglingId, setTogglingId] = useState(null);
+
+  const FIVE_MIN = 5 * 60 * 1000;
+  function isRiderOnline(r) {
+    if (r.isOnline) return true;
+    const upd = r.currentLocation?.updatedAt;
+    return upd && (Date.now() - new Date(upd)) < FIVE_MIN;
+  }
 
   const page      = parseInt(searchParams.get("page") || "1");
   const search    = searchParams.get("search") || "";
@@ -42,26 +48,11 @@ export default function DeliveryRiders() {
     if (search)    params.search    = search;
     if (kycStatus) params.kycStatus = kycStatus;
 
-    Promise.all([
-      api.get("/delivery-riders", { params }),
-      api.get("/live-locations"),
-    ])
-      .then(([ridersRes, liveRes]) => {
-        setRiders(ridersRes.data.riders || []);
-        setTotal(ridersRes.data.total || 0);
-        setPages(ridersRes.data.pages || 1);
-
-        // Build lookup map by rider ID
-        const map = {};
-        for (const r of liveRes.data.riders || []) {
-          map[String(r._id)] = {
-            isOnline: r.isOnline,
-            lat: r.currentLocation?.lat,
-            lng: r.currentLocation?.lng,
-            updatedAt: r.currentLocation?.updatedAt,
-          };
-        }
-        setLiveMap(map);
+    api.get("/delivery-riders", { params })
+      .then((res) => {
+        setRiders(res.data.riders || []);
+        setTotal(res.data.total || 0);
+        setPages(res.data.pages || 1);
       })
       .catch((err) => setError(err?.response?.data?.error || "Failed to load riders"))
       .finally(() => setLoading(false));
@@ -69,24 +60,11 @@ export default function DeliveryRiders() {
 
   useEffect(() => { fetchRiders(); }, [fetchRiders]);
 
-  // Refresh live status every 30s
+  // Refresh riders (including live status) every 30s
   useEffect(() => {
-    const id = setInterval(() => {
-      api.get("/live-locations").then((res) => {
-        const map = {};
-        for (const r of res.data.riders || []) {
-          map[String(r._id)] = {
-            isOnline: r.isOnline,
-            lat: r.currentLocation?.lat,
-            lng: r.currentLocation?.lng,
-            updatedAt: r.currentLocation?.updatedAt,
-          };
-        }
-        setLiveMap(map);
-      }).catch(() => {});
-    }, 30000);
+    const id = setInterval(() => fetchRiders(), 30000);
     return () => clearInterval(id);
-  }, []);
+  }, [fetchRiders]);
 
   function setParam(key, value) {
     const p = new URLSearchParams(searchParams);
@@ -123,7 +101,7 @@ export default function DeliveryRiders() {
     navigate(`/live-map?highlight=${riderId}`);
   }
 
-  const onlineCount = Object.values(liveMap).filter(v => v.isOnline).length;
+  const onlineCount = riders.filter(isRiderOnline).length;
 
   return (
     <div>
@@ -191,9 +169,8 @@ export default function DeliveryRiders() {
               {riders.map((r) => {
                 const kycSt    = r.kyc?.status || "pending";
                 const avgRating = r.stats?.averageRating;
-                const live     = liveMap[String(r._id)];
-                const isOnline = live?.isOnline;
-                const hasLoc   = live?.lat != null && live?.lng != null;
+                const isOnline = isRiderOnline(r);
+                const hasLoc   = r.currentLocation?.lat != null && r.currentLocation?.lng != null;
 
                 return (
                   <tr key={r._id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/delivery-riders/${r._id}`)}>
